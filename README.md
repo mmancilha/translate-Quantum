@@ -66,7 +66,8 @@ python translate.py
 
 1. **Clone ou baixe o projeto**
    ```bash
-   cd c:\Users\mmanc\Music\translate
+   git clone https://github.com/mmancilha/translate-Quantum.git
+   cd translate-Quantum
    ```
 
 2. **Crie um ambiente virtual**
