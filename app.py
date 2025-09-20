@@ -1,18 +1,34 @@
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, render_template_string, send_from_directory
+from flask_cors import CORS
 import os
 import logging
 import fasttext
+from googletrans import Translator
+import requests
+import numpy as np
+from werkzeug.exceptions import RequestEntityTooLarge
+from config import get_config
 
-# Configuração do Flask
+# Flask Configuration
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'tradutor-quantum-2025'
+config_class = get_config()
+app.config.from_object(config_class)
+
+# Initialize CORS
+cors = CORS(app, origins=app.config.get('CORS_ORIGINS', '*'))
+
+# Add security headers for production
+if app.config.get('FLASK_ENV') == 'production':
+    @app.after_request
+    def add_security_headers(response):
+        security_headers = app.config.get('SECURITY_HEADERS', {})
+        for header, value in security_headers.items():
+            response.headers[header] = value
+        return response
 
 # Configuração de logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-# Usando Google Translate - solução leve e eficiente
-from googletrans import Translator
 
 # Idiomas suportados pelo Google Translate
 SUPPORTED_LANGUAGES = {
@@ -36,24 +52,110 @@ translator = Translator()
 # Modelo de detecção de idioma
 language_detector = None
 
+def normalize_language_code(lang_code):
+    """
+    Normaliza códigos de idioma para compatibilidade com Google Translate.
+    
+    Args:
+        lang_code (str): Código do idioma a ser normalizado
+        
+    Returns:
+        str: Código de idioma normalizado
+    """
+    if not lang_code:
+        return 'auto'
+    
+    # Converter para minúsculo e remover espaços
+    lang_code = str(lang_code).lower().strip()
+    
+    # Mapeamento de códigos alternativos para códigos padrão do Google Translate
+    lang_mapping = {
+        'auto': 'auto',
+        'pt': 'pt',
+        'pt-br': 'pt',
+        'portuguese': 'pt',
+        'portugues': 'pt',
+        'en': 'en',
+        'en-us': 'en',
+        'english': 'en',
+        'ingles': 'en',
+        'es': 'es',
+        'es-es': 'es',
+        'spanish': 'es',
+        'espanhol': 'es',
+        'fr': 'fr',
+        'fr-fr': 'fr',
+        'french': 'fr',
+        'frances': 'fr',
+        'de': 'de',
+        'de-de': 'de',
+        'german': 'de',
+        'alemao': 'de',
+        'it': 'it',
+        'it-it': 'it',
+        'italian': 'it',
+        'italiano': 'it',
+        'ja': 'ja',
+        'japanese': 'ja',
+        'japones': 'ja',
+        'ko': 'ko',
+        'korean': 'ko',
+        'coreano': 'ko',
+        'zh': 'zh',
+        'zh-cn': 'zh',
+        'chinese': 'zh',
+        'chines': 'zh',
+        'ru': 'ru',
+        'russian': 'ru',
+        'russo': 'ru',
+        'ar': 'ar',
+        'arabic': 'ar',
+        'arabe': 'ar'
+    }
+    
+    # Retornar código normalizado ou o código original se não encontrado
+    normalized = lang_mapping.get(lang_code, lang_code)
+    
+    # Verificar se o código normalizado está nos idiomas suportados
+    if normalized not in SUPPORTED_LANGUAGES:
+        logger.warning(f"Código de idioma não suportado: {lang_code} -> {normalized}. Usando 'auto'.")
+        return 'auto'
+    
+    return normalized
+
 def load_language_detector():
-    """Carrega o modelo FastText para detecção de idiomas"""
+    """Carrega o modelo FastText para detecção de idioma"""
+    model_path = app.config.get('FASTTEXT_MODEL_PATH', 'lid.176.bin')
+    model_url = app.config.get('FASTTEXT_MODEL_URL', 'https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.bin')
+    
+    # For production deployment, use /tmp directory
+    if app.config.get('FLASK_ENV') == 'production':
+        model_path = f'/tmp/{os.path.basename(model_path)}'
+    
+    if not os.path.exists(model_path):
+        logger.info(f"Baixando modelo FastText de {model_url}...")
+        try:
+            response = requests.get(model_url, stream=True, timeout=300)
+            response.raise_for_status()
+            
+            # Ensure directory exists
+            os.makedirs(os.path.dirname(model_path), exist_ok=True)
+            
+            with open(model_path, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    f.write(chunk)
+            
+            logger.info("Modelo FastText baixado com sucesso!")
+        except Exception as e:
+            logger.error(f"Erro ao baixar modelo FastText: {e}")
+            return None
+    
     try:
-        # Baixar modelo se não existir
-        import urllib.request
-        import os
-        
-        model_path = 'lid.176.bin'
-        if not os.path.exists(model_path):
-            print("Baixando modelo de detecção de idiomas...")
-            urllib.request.urlretrieve(
-                'https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.bin',
-                model_path
-            )
-        
-        return fasttext.load_model(model_path)
+        model = fasttext.load_model(model_path)
+        logger.info("Modelo FastText carregado com sucesso!")
+        return model
     except Exception as e:
-        print(f"Erro ao carregar modelo de detecção: {e}")
+        logger.error(f"Erro ao carregar modelo FastText: {e}")
         return None
 
 def detect_language(text):
@@ -123,12 +225,16 @@ def translate_text(text, source_lang, target_lang):
         if not text or not text.strip():
             return {"error": "Texto vazio"}
         
+        # Normalizar códigos de idioma para o Google Translate
+        source_lang_normalized = normalize_language_code(source_lang)
+        target_lang_normalized = normalize_language_code(target_lang)
+        
         # Verificar se os idiomas são diferentes (exceto para auto)
-        if source_lang != 'auto' and source_lang == target_lang:
-            return {"translation": text, "detected_language": source_lang}
+        if source_lang_normalized != 'auto' and source_lang_normalized == target_lang_normalized:
+            return {"translation": text, "detected_language": source_lang_normalized}
         
         # Realizar a tradução
-        result = translator.translate(text, src=source_lang, dest=target_lang)
+        result = translator.translate(text, src=source_lang_normalized, dest=target_lang_normalized)
         
         return {
             "translation": result.text,
@@ -160,39 +266,108 @@ def script():
 def translate():
     """Endpoint para tradução de texto"""
     try:
+        # Verificar se há dados JSON na requisição
+        if not request.is_json:
+            return jsonify({
+                "error": "Content-Type deve ser application/json",
+                "success": False
+            }), 400
+        
         data = request.get_json()
         
         if not data:
-            return jsonify({"error": "Dados JSON inválidos"}), 400
+            return jsonify({
+                "error": "Dados JSON inválidos ou vazios",
+                "success": False
+            }), 400
         
+        # Validar campos obrigatórios
         text = data.get('text', '').strip()
         source_lang = data.get('source_lang', 'auto')
         target_lang = data.get('target_lang', 'en')
+        detect_only = data.get('detect_only', False)
         
         if not text:
-            return jsonify({"error": "Texto não fornecido"}), 400
+            return jsonify({
+                "error": "Campo 'text' é obrigatório e não pode estar vazio",
+                "success": False
+            }), 400
         
+        # Validar tamanho do texto
+        if len(text) > 5000:
+            return jsonify({
+                "error": "Texto muito longo. Máximo de 5000 caracteres",
+                "success": False
+            }), 400
+        
+        # Se for apenas detecção de idioma
+        if detect_only:
+            detected_lang, confidence = detect_language(text)
+            return jsonify({
+                "success": True,
+                "detected_language": detected_lang,
+                "confidence": confidence
+            })
+        
+        # Validar idioma de destino
         if not target_lang:
-            return jsonify({"error": "Idioma de destino não fornecido"}), 400
+            return jsonify({
+                "error": "Campo 'target_lang' é obrigatório",
+                "success": False
+            }), 400
         
-        # Verificar se os idiomas são suportados
-        if source_lang != 'auto' and source_lang not in SUPPORTED_LANGUAGES:
-            return jsonify({"error": f"Idioma de origem não suportado: {source_lang}"}), 400
+        # Normalizar códigos de idioma
+        source_lang_normalized = normalize_language_code(source_lang)
+        target_lang_normalized = normalize_language_code(target_lang)
+        
+        # Verificar se os idiomas normalizados são suportados
+        if source_lang_normalized != 'auto' and source_lang_normalized not in SUPPORTED_LANGUAGES:
+            return jsonify({
+                "error": f"Idioma de origem não suportado: '{source_lang}'. Idiomas suportados: {list(SUPPORTED_LANGUAGES.keys())}",
+                "success": False
+            }), 400
             
-        if target_lang not in SUPPORTED_LANGUAGES:
-            return jsonify({"error": f"Idioma de destino não suportado: {target_lang}"}), 400
+        if target_lang_normalized not in SUPPORTED_LANGUAGES:
+            return jsonify({
+                "error": f"Idioma de destino não suportado: '{target_lang}'. Idiomas suportados: {list(SUPPORTED_LANGUAGES.keys())}",
+                "success": False
+            }), 400
         
         # Realizar tradução
-        result = translate_text(text, source_lang, target_lang)
+        result = translate_text(text, source_lang_normalized, target_lang_normalized)
         
         if "error" in result:
-            return jsonify(result), 400
+            return jsonify({
+                "error": result["error"],
+                "success": False
+            }), 400
         
+        # Adicionar detecção de idioma se não foi fornecido
+        if source_lang_normalized == 'auto':
+            detected_lang, confidence = detect_language(text)
+            result["detected_language"] = detected_lang
+            result["confidence"] = confidence
+        
+        result["success"] = True
         return jsonify(result)
         
+    except ValueError as e:
+        logger.error(f"Erro de validação: {str(e)}")
+        return jsonify({
+            "error": f"Dados inválidos: {str(e)}",
+            "success": False
+        }), 400
     except Exception as e:
         logger.error(f"Erro no endpoint de tradução: {str(e)}")
-        return jsonify({"error": "Erro interno do servidor"}), 500
+        return jsonify({
+            "error": "Erro interno do servidor. Tente novamente.",
+            "success": False
+        }), 500
+
+@app.route('/test')
+def test_page():
+    """Página de teste da funcionalidade"""
+    return send_from_directory('.', 'test_frontend.html')
 
 @app.route('/health')
 def health():

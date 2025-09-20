@@ -1,234 +1,176 @@
-// Elementos DOM
-const sourceText = document.getElementById('sourceText');
-const targetText = document.getElementById('targetText');
-const sourceLangSelect = document.getElementById('sourceLangSelect');
-const targetLangSelect = document.getElementById('targetLangSelect');
-const detectedLang = document.getElementById('detectedLang');
-const detectedLangText = document.getElementById('detectedLangText');
-const translationPath = document.getElementById('translationPath');
-const clearBtn = document.getElementById('clearBtn');
+// Global variables
+let currentTranslation = '';
+let translationTimeout = null;
+
+// DOM elements
+const inputTextarea = document.getElementById('inputText');
+const outputContent = document.getElementById('outputContent');
+const sourceLanguageSelect = document.getElementById('sourceLanguage');
+const targetLanguageSelect = document.getElementById('targetLanguage');
 const copyBtn = document.getElementById('copyBtn');
 const speakBtn = document.getElementById('speakBtn');
-const speakSourceBtn = document.getElementById('speakSourceBtn');
-const swapBtn = document.getElementById('swapBtn');
-// REMOVIDO: const translateBtn = document.getElementById('translateBtn');
-const charCount = document.getElementById('charCount');
-const loadingIndicator = document.getElementById('loadingIndicator');
-const errorMessage = document.getElementById('errorMessage');
-const errorText = document.getElementById('errorText');
+const charCountSpan = document.getElementById('charCount');
+// Removed detectedLanguageSpan as it's no longer in HTML
 
-// Estado da aplicação
-let isTranslating = false;
-let currentTranslation = null;
-let autoTranslateTimeout = null;
-let lastTranslatedText = '';
-let lastSourceLang = '';
-let lastTargetLang = '';
+// Initialize the application
+function initializeApp() {
+    // Auto-clear fields on page load/refresh
+    clearAllFields();
+    
+    // Set up event listeners
+    inputTextarea.addEventListener('input', handleInput);
+    inputTextarea.addEventListener('keydown', handleKeyDown);
+    targetLanguageSelect.addEventListener('change', handleLanguageChange);
+    sourceLanguageSelect.addEventListener('change', handleLanguageChange);
+    copyBtn.addEventListener('click', copyToClipboard);
+    speakBtn.addEventListener('click', speakText);
 
-// Controle de áudio
-let isPlayingAudio = false;
-let currentUtterance = null;
+    // Set up keyboard shortcuts
+    document.addEventListener('keydown', handleGlobalKeyDown);
+    
+    // Set up auto-clear on page visibility change (browser close/reopen)
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Set up auto-clear on beforeunload (page refresh/close)
+    window.addEventListener('beforeunload', clearAllFields);
 
-// Configurações de tradução automática
-const AUTO_TRANSLATE_DELAY = 1500; // 1.5 segundos de delay
-const MIN_TEXT_LENGTH = 3; // Mínimo de caracteres para traduzir
-
-// Mapeamento de idiomas para nomes
-const LANGUAGE_NAMES = {
-    'en': 'Inglês',
-    'pt': 'Português', 
-    'es': 'Espanhol',
-    'fr': 'Francês',
-    'de': 'Alemão',
-    'it': 'Italiano'
-};
-
-// Inicialização
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, initializing...');
-    initializeEventListeners();
-    updateUI();
+    // Initialize UI
+    clearOutput();
     updateCharCount();
-    sourceText.focus();
-    loadState();
-    
-    // Forçar atualização inicial da UI
-    setTimeout(() => {
-        console.log('Forcing initial UI update...');
-        updateUI();
-    }, 100);
-    
-    console.log('Sistema de tradução multilíngue inicializado');
-});
-
-// Event Listeners
-function initializeEventListeners() {
-    // Texto de origem
-    sourceText.addEventListener('input', handleSourceTextChange);
-    sourceText.addEventListener('paste', handlePaste);
-    sourceText.addEventListener('keydown', handleKeyDown);
-    
-    // Seletores de idioma
-    sourceLangSelect.addEventListener('change', handleLanguageChange);
-    targetLangSelect.addEventListener('change', handleLanguageChange);
-    
-    // Botões de controle
-    clearBtn.addEventListener('click', handleClear);
-    copyBtn.addEventListener('click', handleCopy);
-    speakBtn.addEventListener('click', () => handleSpeak(currentTranslation?.text, lastTargetLang));
-    speakSourceBtn.addEventListener('click', () => handleSpeak(sourceText.value, getSourceLanguage()));
-    swapBtn.addEventListener('click', handleSwap);
-    // REMOVIDO: translateBtn.addEventListener('click', handleTranslate);
-    
-    // Fechar mensagens de erro
-    errorMessage.addEventListener('click', hideError);
 }
 
-// Manipuladores de eventos
-// Manipulação de texto de origem com tradução automática
-function handleSourceTextChangeWithAutoTranslate() {
-    const text = sourceText.value.trim();
-    
-    // Mostrar indicador de digitação
-    if (text.length > 0) {
-        typingIndicator.classList.add('active');
-        autoTranslateIndicator.classList.add('active');
-    } else {
-        typingIndicator.classList.remove('active');
-        autoTranslateIndicator.classList.remove('active');
+// Handle visibility change (browser tab switch, minimize, etc.)
+function handleVisibilityChange() {
+    if (document.visibilityState === 'visible') {
+        // Clear fields when page becomes visible again
+        clearAllFields();
     }
-    
-    // Limpar timeout anterior
-    if (autoTranslateTimeout) {
-        clearTimeout(autoTranslateTimeout);
-        autoTranslateTimeout = null;
-    }
-    
-    // Atualizar UI imediatamente
-    updateUI();
-    
-    // Se o texto está vazio, limpar tradução
-    if (!text) {
-        targetText.value = '';
-        currentTranslation = '';
-        lastTranslatedText = '';
-        typingIndicator.classList.remove('active');
-        autoTranslateIndicator.classList.remove('active');
-        return;
-    }
-    
-    // Se o texto é muito curto, não traduzir
-    if (text.length < MIN_TEXT_LENGTH) {
-        return;
-    }
-    
-    // Se o texto não mudou significativamente, não traduzir novamente
-    if (text === lastTranslatedText) {
-        typingIndicator.classList.remove('active');
-        return;
-    }
-    
-    // Configurar novo timeout para tradução automática
-    autoTranslateTimeout = setTimeout(() => {
-        if (sourceText.value.trim() === text && !isTranslating) {
-            typingIndicator.classList.remove('active');
-            performTranslation(text);
-        }
-    }, AUTO_TRANSLATE_DELAY);
 }
 
-function handleSourceTextChange() {
+// Clear all fields and reset state
+function clearAllFields() {
+    inputTextarea.value = '';
+    currentTranslation = '';
+    clearOutput();
     updateCharCount();
-    updateUI();
     
-    // Limpar tradução anterior se o texto mudou significativamente
-    const currentText = sourceText.value.trim();
-    if (Math.abs(currentText.length - lastTranslatedText.length) > 10) {
-        clearTranslation();
-    }
+    // Reset language selectors to default
+    sourceLanguageSelect.value = 'auto';
+    targetLanguageSelect.value = 'pt';
     
-    // Configurar tradução automática
-    if (autoTranslateTimeout) {
-        clearTimeout(autoTranslateTimeout);
-    }
-    
-    if (currentText.length >= MIN_TEXT_LENGTH) {
-        autoTranslateTimeout = setTimeout(() => {
-            if (!isTranslating && currentText !== lastTranslatedText) {
-                handleTranslate();
-            }
-        }, AUTO_TRANSLATE_DELAY);
+    // Clear any pending timeouts
+    if (translationTimeout) {
+        clearTimeout(translationTimeout);
+        translationTimeout = null;
     }
 }
 
-function handleLanguageChange() {
-    // Limpar tradução quando idiomas mudarem
-    clearTranslation();
-    hideDetectedLanguage();
-    updateUI();
-    
-    // Traduzir automaticamente se há texto
-    const text = sourceText.value.trim();
-    if (text.length >= MIN_TEXT_LENGTH) {
-        setTimeout(() => handleTranslate(), 500);
-    }
-}
-
-function getSourceLanguage() {
-    return sourceLangSelect.value === 'auto' ? (lastSourceLang || 'en') : sourceLangSelect.value;
-}
-
+// Update character count
 function updateCharCount() {
-    const count = sourceText.value.length;
-    charCount.textContent = count;
+    const count = inputTextarea.value.length;
+    charCountSpan.textContent = `${count}/5000`;
     
-    // Mudar cor se próximo do limite
     if (count > 4500) {
-        charCount.style.color = '#ea4335';
+        charCountSpan.className = 'text-red-500 font-medium';
     } else if (count > 4000) {
-        charCount.style.color = '#fbbc04';
+        charCountSpan.className = 'text-yellow-600 font-medium';
     } else {
-        charCount.style.color = '#9aa0a6';
+        charCountSpan.className = 'text-gray-500';
     }
 }
 
-function handlePaste(event) {
-    // Permitir paste normal, mas limpar tradução
-    setTimeout(() => {
-        clearTranslation();
-        updateCharCount();
-        updateUI();
-    }, 10);
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', initializeApp);
+
+// Handle input changes
+function handleInput() {
+    updateCharCount();
+    
+    // Clear previous timeout
+    if (translationTimeout) {
+        clearTimeout(translationTimeout);
+    }
+    
+    const text = inputTextarea.value.trim();
+    
+    if (text.length === 0) {
+        clearOutput();
+        return;
+    }
+    
+    // Auto-translate after 1 second of no typing
+    translationTimeout = setTimeout(() => {
+        if (text.length > 0) {
+            translateText();
+        }
+    }, 1000);
 }
 
+// Handle keydown events
 function handleKeyDown(event) {
-    // Ctrl+Enter para traduzir
-    if (event.ctrlKey && event.key === 'Enter') {
+    if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
         event.preventDefault();
-        handleTranslate();
+        translateText();
     }
 }
 
-async function handleTranslate() {
-    const text = sourceText.value.trim();
+// Handle language change
+function handleLanguageChange() {
+    const text = inputTextarea.value.trim();
+    if (text.length > 0) {
+        translateText();
+    }
+}
+
+// Handle global keyboard shortcuts
+function handleGlobalKeyDown(event) {
+    if (event.ctrlKey || event.metaKey) {
+        switch(event.key) {
+            case 'k':
+                event.preventDefault();
+                inputTextarea.focus();
+                break;
+            case 'c':
+                // Only allow copy if user is not selecting text in input area
+                if (event.target !== inputTextarea && !window.getSelection().toString() && currentTranslation) {
+                    event.preventDefault();
+                    copyToClipboard();
+                }
+                break;
+        }
+    }
+}
+
+// Show error message
+function showError(message) {
+    outputContent.innerHTML = `
+        <div class="flex flex-col items-center justify-center h-full py-12 text-red-500">
+            <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
+            <p class="font-medium">${message}</p>
+        </div>
+    `;
+}
+
+
+
+// Clear function for keyboard shortcut
+function clearAll() {
+    inputTextarea.value = '';
+    updateCharCount();
+    clearOutput();
+    inputTextarea.focus();
+}
+
+// Main translation function
+async function translateText() {
+    const text = inputTextarea.value.trim();
     if (!text) return;
     
-    await performTranslation(text);
-}
-
-async function performTranslation(text) {
-    if (!text.trim() || isTranslating) return;
-    
-    isTranslating = true;
-    lastTranslatedText = text;
-    
-    setTranslating(true);
-    hideError();
-    hideDetectedLanguage();
+    showLoading();
     
     try {
-        const sourceLang = sourceLangSelect.value;
-        const targetLang = targetLangSelect.value;
+        const sourceLang = sourceLanguageSelect.value;
+        const targetLang = targetLanguageSelect.value;
         
         const response = await fetch('/translate', {
             method: 'POST',
@@ -236,439 +178,387 @@ async function performTranslation(text) {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                text: text.trim(),
+                text: text,
                 source_lang: sourceLang,
                 target_lang: targetLang
             })
         });
         
         if (!response.ok) {
-            throw new Error(`Erro ${response.status}: ${response.statusText}`);
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         const data = await response.json();
         
-        if (data.error) {
-            throw new Error(data.error);
-        }
-        
-        // Armazenar informações da tradução
-        currentTranslation = {
-            source: text.trim(),
-            text: data.translation,
-            timestamp: Date.now()
-        };
-        
-        lastSourceLang = data.detected_language || sourceLang;
-        lastTargetLang = targetLang;
-        
-        // Mostrar idioma detectado se foi detecção automática
-        if (sourceLang === 'auto' && data.detected_language) {
-            showDetectedLanguage(data.detected_language);
-        }
-        
-        displayTranslation(data.translation, text);
-        
-    } catch (error) {
-        console.error('Erro na tradução:', error);
-        showError(getErrorMessage(error));
-    } finally {
-        setTranslating(false);
-    }
-}
-
-function handleClear() {
-    sourceText.value = '';
-    clearTranslation();
-    sourceText.focus();
-    updateCharCount();
-}
-
-function handleCopy() {
-    if (currentTranslation?.text) {
-        navigator.clipboard.writeText(currentTranslation.text).then(() => {
-            // Feedback visual
-            const originalText = copyBtn.textContent;
-            copyBtn.textContent = 'Copiado!';
+        if (data.success) {
+            currentTranslation = data.translation;
+            
+            // Display translation with animation
+            const translationContainer = document.createElement('div');
+            translationContainer.className = 'opacity-0 translate-y-2 transition-all duration-500';
+            translationContainer.innerHTML = `
+                <div class="text-google-text text-lg leading-relaxed whitespace-pre-wrap p-4">${escapeHtml(data.translation)}</div>
+            `;
+            
+            outputContent.innerHTML = '';
+            outputContent.className = 'min-h-80 bg-google-bg border border-google-border rounded-lg';
+            outputContent.appendChild(translationContainer);
+            
+            // Trigger animation
             setTimeout(() => {
-                copyBtn.textContent = originalText;
-            }, 1000);
-        }).catch(err => {
-            console.error('Erro ao copiar:', err);
-            showError('Erro ao copiar texto');
-        });
+                translationContainer.classList.remove('opacity-0', 'translate-y-2');
+                translationContainer.classList.add('opacity-100', 'translate-y-0');
+            }, 50);
+            
+            // Language detection removed from UI
+            
+            // Enable buttons with animation
+            copyBtn.disabled = false;
+            speakBtn.disabled = false;
+            copyBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            speakBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            copyBtn.classList.add('transition-all', 'duration-200', 'hover:scale-105');
+            speakBtn.classList.add('transition-all', 'duration-200', 'hover:scale-105');
+            
+        } else {
+            showError(data.error || 'Erro na tradução');
+        }
+    } catch (error) {
+        console.error('Translation error:', error);
+        showError('Erro de conexão. Verifique sua internet.');
     }
 }
 
-function handleSpeak(text, lang) {
-    if (!text || !('speechSynthesis' in window)) return;
-    
-    // Parar qualquer fala anterior
-    speechSynthesis.cancel();
-    
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = lang === 'pt' ? 'pt-BR' : lang === 'es' ? 'es-ES' : lang === 'fr' ? 'fr-FR' : 'en-US';
-    utterance.rate = 0.9;
-    utterance.pitch = 1;
-    
-    speechSynthesis.speak(utterance);
+// Remove duplicate functions - using the main translation display logic above
+
+// Show loading state
+function showLoading() {
+    outputContent.innerHTML = `
+        <div class="flex flex-col items-center justify-center h-full py-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-google-accent mb-4"></div>
+            <p class="text-google-text font-medium">Traduzindo...</p>
+        </div>
+    `;
 }
 
-function handleSpeakSource() {
-    const text = sourceText.value.trim();
+function clearOutput() {
+    outputContent.innerHTML = `
+        <div class="text-center">
+            <i class="fas fa-comments text-4xl text-google-muted mb-4"></i>
+            <p>A tradução aparecerá aqui...</p>
+        </div>
+    `;
+    copyBtn.disabled = true;
+    speakBtn.disabled = true;
+    copyBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    speakBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    copyBtn.classList.remove('transition-all', 'duration-200', 'hover:scale-105');
+    speakBtn.classList.remove('transition-all', 'duration-200', 'hover:scale-105');
+    currentTranslation = '';
+}
+
+// Button actions
+function copyToClipboard() {
+    if (!currentTranslation) return;
     
-    if (!text || !('speechSynthesis' in window)) {
-        return;
-    }
+    navigator.clipboard.writeText(currentTranslation).then(() => {
+        showToast('Texto copiado para a área de transferência!', 'success');
+        
+        // Visual feedback with Google colors
+        const originalText = copyBtn.innerHTML;
+        copyBtn.innerHTML = '<i class="fas fa-check"></i> Copiado!';
+        copyBtn.classList.add('bg-green-600', 'scale-95');
+        copyBtn.classList.remove('bg-google-surface', 'hover:bg-google-hover');
+        
+        setTimeout(() => {
+            copyBtn.innerHTML = originalText;
+            copyBtn.classList.remove('bg-green-600', 'scale-95');
+            copyBtn.classList.add('bg-google-surface', 'hover:bg-google-hover');
+        }, 2000);
+    }).catch(err => {
+        console.error('Erro ao copiar:', err);
+        showToast('Erro ao copiar texto', 'error');
+    });
+}
 
-    // Se já está reproduzindo, parar a reprodução atual
-    if (isPlayingAudio) {
-        stopCurrentAudio();
-        return;
-    }
-
-    // Parar qualquer fala em andamento
+function speakText() {
+    if (!currentTranslation) return;
+    
+    // Stop any current speech
     speechSynthesis.cancel();
     
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'en-US';
-    utterance.rate = 0.9;
+    const utterance = new SpeechSynthesisUtterance(currentTranslation);
+    
+    // Set language based on target language
+    const targetLang = targetLanguageSelect.value;
+    utterance.lang = getLanguageCodeForSpeech(targetLang);
+    
+    // Speech settings
+    utterance.rate = 0.8;
     utterance.pitch = 1;
+    utterance.volume = 1;
     
-    // Controle de estado
-    isPlayingAudio = true;
-    currentUtterance = utterance;
-    
-    // Feedback visual durante a fala
-    speakSourceBtn.style.color = '#4285f4';
-    speakSourceBtn.title = 'Parar áudio';
+    // Visual feedback with Google colors and animation
+    const originalText = speakBtn.innerHTML;
+    speakBtn.innerHTML = '<i class="fas fa-stop animate-pulse"></i> Parar';
+    speakBtn.classList.add('bg-google-accent', 'scale-95');
+    speakBtn.classList.remove('bg-google-surface', 'hover:bg-google-hover');
     
     utterance.onend = () => {
-        resetAudioState();
+        speakBtn.innerHTML = originalText;
+        speakBtn.classList.remove('bg-google-accent', 'scale-95');
+        speakBtn.classList.add('bg-google-surface', 'hover:bg-google-hover');
     };
     
-    utterance.onerror = () => {
-        resetAudioState();
-        showError('Erro ao reproduzir áudio');
+    utterance.onerror = (event) => {
+        console.error('Erro na síntese de voz:', event.error);
+        speakBtn.innerHTML = originalText;
+        speakBtn.classList.remove('bg-google-accent', 'scale-95');
+        speakBtn.classList.add('bg-google-surface', 'hover:bg-google-hover');
+        showToast('Erro na reprodução de áudio', 'error');
     };
-
+    
     speechSynthesis.speak(utterance);
 }
 
-function stopCurrentAudio() {
-    if (speechSynthesis.speaking) {
-        speechSynthesis.cancel();
-    }
-    resetAudioState();
-}
 
-function resetAudioState() {
-    isPlayingAudio = false;
-    currentUtterance = null;
-    
-    // Resetar feedback visual dos botões
-    speakBtn.style.color = '';
-    speakBtn.title = 'Ouvir tradução';
-    speakSourceBtn.style.color = '';
-    speakSourceBtn.title = 'Ouvir texto em inglês';
-}
 
-function handleSwap() {
-    if (!currentTranslation || sourceLangSelect.value === 'auto') return;
-    
-    // Trocar textos
-    const sourceValue = sourceText.value;
-    const targetValue = targetText.value;
-    
-    sourceText.value = targetValue;
-    targetText.value = sourceValue;
-    
-    // Trocar idiomas
-    const sourceLang = sourceLangSelect.value;
-    const targetLang = targetLangSelect.value;
-    
-    sourceLangSelect.value = targetLang;
-    targetLangSelect.value = sourceLang;
-    
-    // Limpar estado
-    currentTranslation = null;
-    hideDetectedLanguage();
-    updateCharCount();
-    updateUI();
-    
-    // Traduzir automaticamente se há texto
-    if (sourceText.value.trim()) {
-        setTimeout(() => handleTranslate(), 500);
-    }
-}
-
+// Keyboard shortcuts
 function handleKeyboardShortcuts(event) {
-    // Ctrl/Cmd + Enter para traduzir
     if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
         event.preventDefault();
-        if (!isTranslating && sourceText.value.trim()) {
-            handleTranslate();
+        const text = inputTextarea.value.trim();
+        if (!isTranslating && text) {
+            translateText(text);
         }
     }
     
-    // Ctrl/Cmd + K para limpar
-    if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
-        event.preventDefault();
-        handleClear();
-    }
-    
-    // Ctrl/Cmd + C quando o foco está na tradução
     if ((event.ctrlKey || event.metaKey) && event.key === 'c' && 
-        document.activeElement === targetText) {
+        document.activeElement !== inputTextarea && currentTranslation) {
         event.preventDefault();
-        handleCopy();
-    }
-}
-
-// Funções auxiliares
-function updateUI() {
-    const hasSourceText = sourceText.value.trim().length > 0;
-    const hasTranslation = currentTranslation && currentTranslation.text;
-    
-    // Debug: verificar se os elementos existem
-    console.log('updateUI called:', { hasSourceText, hasTranslation });
-    console.log('Elements found:', {
-        clearBtn: !!clearBtn,
-        copyBtn: !!copyBtn,
-        speakBtn: !!speakBtn,
-        speakSourceBtn: !!speakSourceBtn,
-        swapBtn: !!swapBtn,
-        // REMOVIDO translateBtn
-    });
-    
-    // Atualizar visibilidade dos botões - usar 'inline-flex' em vez de 'flex'
-    if (clearBtn) {
-        clearBtn.style.display = hasSourceText ? 'inline-flex' : 'none';
-        console.log('clearBtn display:', clearBtn.style.display);
-    }
-    if (copyBtn) {
-        copyBtn.style.display = hasTranslation ? 'inline-flex' : 'none';
-        console.log('copyBtn display:', copyBtn.style.display);
-    }
-    if (speakBtn) {
-        speakBtn.style.display = hasTranslation ? 'inline-flex' : 'none';
-        console.log('speakBtn display:', speakBtn.style.display);
-    }
-    if (speakSourceBtn) {
-        speakSourceBtn.style.display = hasSourceText ? 'inline-flex' : 'none';
-        console.log('speakSourceBtn display:', speakSourceBtn.style.display);
-    }
-    if (swapBtn) {
-        swapBtn.style.display = hasTranslation ? 'inline-flex' : 'none';
-        console.log('swapBtn display:', swapBtn.style.display);
+        copyToClipboard();
     }
     
-    // REMOVIDO: lógica de translateBtn
+    // Ctrl+L to clear
+    if ((event.ctrlKey || event.metaKey) && event.key === 'l') {
+        event.preventDefault();
+        clearAll();
+    }
     
-    // Atualizar placeholder da caixa de tradução
-    if (targetText) {
-        if (hasTranslation) {
-            targetText.removeAttribute('data-placeholder');
-        } else {
-            targetText.setAttribute('data-placeholder', 'A tradução aparecerá aqui...');
+    if (event.key === 'Escape') {
+        if (isTranslating) {
+            setTranslatingState(false);
         }
     }
-    
-    // Atualizar indicadores
-    if (loadingIndicator) {
-        loadingIndicator.style.display = isTranslating ? 'block' : 'none';
-    }
-    
-    // Auto-resize do textarea
-    if (sourceText) {
-        autoResize(sourceText);
-    }
 }
 
-function setTranslating(translating) {
-    isTranslating = translating;
-    
-    if (translating) {
-        loadingIndicator.classList.remove('hidden');
-        // Desabilitar botões durante tradução
-        clearBtn.disabled = true;
-        copyBtn.disabled = true;
-        speakBtn.disabled = true;
-        speakSourceBtn.disabled = true;
-    } else {
-        loadingIndicator.classList.add('hidden');
-        // Reabilitar botões após tradução
-        clearBtn.disabled = false;
-        copyBtn.disabled = false;
-        speakBtn.disabled = false;
-        speakSourceBtn.disabled = false;
-    }
-    
-    updateUI();
+// Utilities
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
-function displayTranslation(translation, sourceTextValue) {
-    currentTranslation = {
-        text: translation,
-        source: sourceTextValue
+function getLanguageCodeForSpeech(code) {
+    const speechCodes = {
+        'pt': 'pt-BR',
+        'en': 'en-US',
+        'es': 'es-ES',
+        'fr': 'fr-FR',
+        'de': 'de-DE',
+        'it': 'it-IT',
+        'ja': 'ja-JP',
+        'ko': 'ko-KR',
+        'zh': 'zh-CN',
+        'ru': 'ru-RU',
+        'ar': 'ar-SA',
+        'hi': 'hi-IN'
+    };
+    return speechCodes[code] || code;
+}
+
+function getLanguageName(code) {
+    const languages = {
+        'pt': 'Português',
+        'en': 'Inglês', 
+        'es': 'Espanhol',
+        'fr': 'Francês',
+        'de': 'Alemão',
+        'it': 'Italiano',
+        'ja': 'Japonês',
+        'ko': 'Coreano',
+        'zh': 'Chinês',
+        'ru': 'Russo',
+        'ar': 'Árabe',
+        'hi': 'Hindi',
+        'nl': 'Holandês',
+        'sv': 'Sueco',
+        'da': 'Dinamarquês',
+        'no': 'Norueguês',
+        'fi': 'Finlandês',
+        'pl': 'Polonês',
+        'cs': 'Tcheco',
+        'sk': 'Eslovaco',
+        'hu': 'Húngaro',
+        'ro': 'Romeno',
+        'bg': 'Búlgaro',
+        'hr': 'Croata',
+        'sr': 'Sérvio',
+        'sl': 'Esloveno',
+        'et': 'Estoniano',
+        'lv': 'Letão',
+        'lt': 'Lituano',
+        'uk': 'Ucraniano',
+        'be': 'Bielorrusso',
+        'mk': 'Macedônio',
+        'sq': 'Albanês',
+        'mt': 'Maltês',
+        'is': 'Islandês',
+        'ga': 'Irlandês',
+        'cy': 'Galês',
+        'eu': 'Basco',
+        'ca': 'Catalão',
+        'gl': 'Galego',
+        'tr': 'Turco',
+        'he': 'Hebraico',
+        'fa': 'Persa',
+        'ur': 'Urdu',
+        'bn': 'Bengali',
+        'ta': 'Tâmil',
+        'te': 'Telugu',
+        'ml': 'Malaiala',
+        'kn': 'Canarês',
+        'gu': 'Gujarati',
+        'pa': 'Punjabi',
+        'mr': 'Marati',
+        'ne': 'Nepalês',
+        'si': 'Cingalês',
+        'my': 'Birmanês',
+        'km': 'Khmer',
+        'lo': 'Laosiano',
+        'ka': 'Georgiano',
+        'am': 'Amárico',
+        'sw': 'Suaíli',
+        'zu': 'Zulu',
+        'af': 'Africâner',
+        'th': 'Tailandês',
+        'vi': 'Vietnamita',
+        'id': 'Indonésio',
+        'ms': 'Malaio',
+        'tl': 'Filipino'
+    };
+    return languages[code] || code.toUpperCase();
+}
+
+function showToast(message, type = 'info') {
+    const existingToast = document.querySelector('.toast');
+    if (existingToast) {
+        existingToast.remove();
+    }
+    
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type} fixed top-4 right-4 z-50 flex items-center space-x-3 px-4 py-3 rounded-lg shadow-lg transform transition-all duration-300 translate-x-full opacity-0`;
+    
+    // Set colors based on type using Google color scheme
+    const colors = {
+        'success': 'bg-green-600 text-white',
+        'error': 'bg-red-600 text-white',
+        'info': 'bg-blue-600 text-white',
+        'warning': 'bg-yellow-600 text-white'
     };
     
-    // Garantir que a tradução seja exibida corretamente no div de destino
-    if (targetText) {
-        targetText.textContent = translation;
-        // Remover o placeholder quando há conteúdo
-        targetText.removeAttribute('data-placeholder');
-    }
+    toast.className += ` ${colors[type] || colors.info}`;
     
-    updateUI();
-}
-
-function clearTranslation() {
-    currentTranslation = '';
-    if (targetText) {
-        targetText.textContent = '';
-        // Restaurar o placeholder quando não há conteúdo
-        targetText.setAttribute('data-placeholder', 'A tradução aparecerá aqui...');
-    }
-    hideDetectedLanguage();
-    updateUI();
-}
-
-function showDetectedLanguage(langCode) {
-    // Verificar se langCode é uma string válida
-    const safeLanguageCode = typeof langCode === 'string' ? langCode : String(langCode || 'unknown');
-    const langName = LANGUAGE_NAMES[safeLanguageCode] || safeLanguageCode.toUpperCase();
-    detectedLangText.textContent = `Detectado: ${langName}`;
-    detectedLang.style.display = 'block';
+    toast.innerHTML = `
+        <i class="fas fa-${getToastIcon(type)} text-lg"></i>
+        <span class="text-sm font-medium">${escapeHtml(message)}</span>
+    `;
     
-    // Atualizar caminho de tradução
-    const targetLangName = LANGUAGE_NAMES[targetLangSelect.value] || targetLangSelect.value.toUpperCase();
-    translationPath.textContent = `${langName} → ${targetLangName}`;
-    translationPath.style.display = 'block';
-}
-
-function hideDetectedLanguage() {
-    detectedLang.style.display = 'none';
-    translationPath.style.display = 'none';
-}
-
-function showError(message) {
-    errorText.textContent = message;
-    errorMessage.classList.remove('hidden');
+    document.body.appendChild(toast);
     
-    // Auto-hide após 5 segundos
+    // Animate in
     setTimeout(() => {
-        hideError();
-    }, 5000);
-}
-
-function hideError() {
-    errorMessage.classList.add('hidden');
-}
-
-function getErrorMessage(error) {
-    if (error.message.includes('Failed to fetch')) {
-        return 'Erro de conexão. Verifique se o servidor está rodando.';
-    } else if (error.message.includes('HTTP')) {
-        return 'Erro no servidor. Tente novamente em alguns instantes.';
-    } else if (error.message.includes('timeout')) {
-        return 'Tempo limite excedido. Tente novamente.';
-    } else {
-        return error.message || 'Erro desconhecido. Tente novamente.';
-    }
-}
-
-// Funcionalidades adicionais
-function detectLanguage(text) {
-    // Detecção simples baseada em caracteres comuns
-    const englishPattern = /^[a-zA-Z0-9\s.,!?;:'"()\-]+$/;
-    const portuguesePattern = /[áàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ]/;
+        toast.classList.remove('translate-x-full', 'opacity-0');
+        toast.classList.add('translate-x-0', 'opacity-100');
+    }, 50);
     
-    if (portuguesePattern.test(text)) {
-        return 'pt';
-    } else if (englishPattern.test(text)) {
-        return 'en';
-    } else {
-        return 'unknown';
-    }
+    // Animate out
+    setTimeout(() => {
+        toast.classList.add('translate-x-full', 'opacity-0');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
 }
 
-// Auto-resize do textarea
-function autoResize(textarea) {
-    textarea.style.height = 'auto';
-    textarea.style.height = Math.max(200, textarea.scrollHeight) + 'px';
-}
-
-// Aplicar auto-resize ao textarea de origem
-sourceText.addEventListener('input', function() {
-    autoResize(this);
-});
-
-// Funcionalidade de arrastar e soltar
-sourceText.addEventListener('dragover', function(event) {
-    event.preventDefault();
-    this.style.borderColor = '#4285f4';
-});
-
-sourceText.addEventListener('dragleave', function(event) {
-    event.preventDefault();
-    this.style.borderColor = '';
-});
-
-sourceText.addEventListener('drop', function(event) {
-    event.preventDefault();
-    this.style.borderColor = '';
-    
-    const files = event.dataTransfer.files;
-    if (files.length > 0) {
-        const file = files[0];
-        if (file.type === 'text/plain') {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                sourceText.value = e.target.result;
-                handleSourceTextChange();
-            };
-            reader.readAsText(file);
-        } else {
-            showError('Apenas arquivos de texto são suportados');
-        }
-    }
-});
-
-// Salvar estado no localStorage
-function saveState() {
-    const state = {
-        sourceText: sourceText.value,
-        translation: currentTranslation
+function getToastIcon(type) {
+    const icons = {
+        'success': 'check-circle',
+        'error': 'exclamation-circle',
+        'info': 'info-circle',
+        'warning': 'exclamation-triangle'
     };
-    localStorage.setItem('translatorState', JSON.stringify(state));
+    return icons[type] || 'info-circle';
 }
 
-function loadState() {
-    try {
-        const saved = localStorage.getItem('translatorState');
-        if (saved) {
-            const state = JSON.parse(saved);
-            if (state.sourceText) {
-                sourceText.value = state.sourceText;
-                handleSourceTextChange();
-            }
-            if (state.translation) {
-                currentTranslation = state.translation;
-                targetText.textContent = state.translation.text;
-                updateUI();
-            }
+// Add CSS animations dynamically
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
         }
-    } catch (error) {
-        console.error('Erro ao carregar estado salvo:', error);
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
     }
-}
-
-// Salvar estado periodicamente
-setInterval(saveState, 5000);
-
-// Carregar estado ao inicializar
-window.addEventListener('load', loadState);
-
-// Salvar estado antes de sair
-window.addEventListener('beforeunload', saveState);
+    
+    @keyframes slideOutRight {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+    
+    .translating-indicator {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 200px;
+        color: var(--text-secondary);
+        text-align: center;
+    }
+    
+    .translating-indicator i {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        color: var(--accent-primary);
+    }
+    
+    .error-message {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 200px;
+        color: var(--error);
+        text-align: center;
+    }
+    
+    .error-message i {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+    
+    .translation-text {
+        padding: 1rem;
+        line-height: 1.6;
+        word-wrap: break-word;
+    }
+`;
+document.head.appendChild(style);

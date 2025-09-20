@@ -1,165 +1,141 @@
-# 🌐 Translate-Quantum
+# 🌐 Quantumm - Tradutor Inteligente
 
-[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![Transformers](https://img.shields.io/badge/🤗%20Transformers-4.56+-orange.svg)](https://huggingface.co/transformers/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.8+-red.svg)](https://pytorch.org/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://python.org)
+[![Flask](https://img.shields.io/badge/Flask-2.3.3-green.svg)](https://flask.palletsprojects.com/)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Status](https://img.shields.io/badge/Status-Active-success.svg)](https://github.com/mayconmancilha/quantumm)
 
-Um tradutor inteligente de **inglês para português** usando o modelo de IA **Helsinki-NLP/opus-mt-tc-big-en-pt** da Hugging Face. Este projeto oferece tradução de alta qualidade com interface interativa e suporte para tradução em lote.
+> **Quantumm** é um tradutor web moderno e inteligente que oferece tradução instantânea entre múltiplos idiomas com uma interface elegante e intuitiva, inspirada no design do Google Translate.
 
-## ✨ Características
+## ✨ Funcionalidades Principais
 
-- 🤖 **IA Avançada**: Utiliza o modelo Helsinki-NLP para traduções precisas
-- 🚀 **Interface Interativa**: Modo de tradução em tempo real
-- 📦 **Tradução em Lote**: Processa múltiplos textos simultaneamente
-- 🔒 **Ambiente Isolado**: Configuração com ambiente virtual Python
-- 💻 **Fácil de Usar**: Interface simples e intuitiva
+- 🚀 **Tradução Instantânea**: Tradução em tempo real conforme você digita
+- 🌍 **Múltiplos Idiomas**: Suporte para mais de 10 idiomas populares
+- 🎯 **Detecção Automática**: Identifica automaticamente o idioma de origem
+- 📱 **Design Responsivo**: Interface adaptável para desktop, tablet e mobile
+- 🎨 **Interface Moderna**: Design dark elegante inspirado no Google Translate
+- 📋 **Copiar Texto**: Copie traduções com um clique
+- 🔊 **Síntese de Voz**: Ouça a pronúncia das traduções
+- ⌨️ **Atalhos de Teclado**: Navegação rápida com shortcuts
+- 🔒 **Privacidade Garantida**: Processamento seguro dos dados
 
-## 🚀 Demonstração
+## 🛠️ Tecnologias Utilizadas
 
-### Exemplos de Tradução
+### Backend
+- **Python 3.8+** - Linguagem principal
+- **Flask 2.3.3** - Framework web minimalista
+- **Google Translate API** - Serviço de tradução
+- **Gunicorn** - Servidor WSGI para produção
 
-```
-Inglês: "Hello, how are you today?"
-Português: "Olá, como estás hoje?"
+### Frontend
+- **HTML5** - Estrutura semântica
+- **CSS3** - Estilização avançada
+- **JavaScript ES6+** - Interatividade e funcionalidades
+- **Tailwind CSS** - Framework de utilitários CSS
+- **Font Awesome** - Ícones vetoriais
+- **Google Fonts** - Tipografia (Inter)
 
-Inglês: "The weather is beautiful today."
-Português: "O tempo está lindo hoje."
+### Ferramentas e Serviços
+- **Vercel** - Plataforma de deploy
+- **Git** - Controle de versão
+- **GitHub** - Repositório e colaboração
 
-Inglês: "I love learning new languages."
-Português: "Adoro aprender novas línguas."
-```
-
-## 📋 Pré-requisitos
-
-- Python 3.8 ou superior
-- pip (gerenciador de pacotes Python)
-- Git (para clonar o repositório)
-
-## ⚡ Instalação Rápida
-
-```bash
-# Clone o repositório
-git clone https://github.com/mmancilha/translate-Quantum.git
-cd translate-Quantum
-
-# Crie e ative o ambiente virtual
-python -m venv venv
-.\venv\Scripts\Activate.ps1  # Windows PowerShell
-# ou
-source venv/bin/activate     # Linux/Mac
-
-# Instale as dependências
-pip install -r requirements.txt
-
-# Execute o tradutor
-python translate.py
-```
-
-## Configuração do Ambiente
+## 📦 Instalação
 
 ### Pré-requisitos
 - Python 3.8 ou superior
 - pip (gerenciador de pacotes Python)
+- Git
 
-### Instalação
+### Passo a Passo
 
-1. **Clone ou baixe o projeto**
+1. **Clone o repositório**
    ```bash
-   git clone https://github.com/mmancilha/translate-Quantum.git
-   cd translate-Quantum
+   git clone https://github.com/mayconmancilha/quantumm.git
+   cd quantumm
    ```
 
 2. **Crie um ambiente virtual**
    ```bash
    python -m venv venv
+   
+   # Windows
+   venv\Scripts\activate
+   
+   # Linux/Mac
+   source venv/bin/activate
    ```
 
-3. **Ative o ambiente virtual**
-   - No Windows (PowerShell):
-     ```bash
-     .\venv\Scripts\Activate.ps1
-     ```
-   - No Windows (Command Prompt):
-     ```bash
-     venv\Scripts\activate.bat
-     ```
-
-4. **Instale as dependências**
+3. **Instale as dependências**
    ```bash
    pip install -r requirements.txt
    ```
 
-## Dependências Principais
+4. **Configure as variáveis de ambiente** (opcional)
+   ```bash
+   cp .env.example .env
+   # Edite o arquivo .env conforme necessário
+   ```
 
-- **transformers**: Biblioteca da Hugging Face para modelos de transformers
-- **torch**: Framework de deep learning PyTorch
-- **sentencepiece**: Tokenizador para processamento de texto
-- **sacremoses**: Ferramentas de pré-processamento de texto
+5. **Execute a aplicação**
+   ```bash
+   python app.py
+   ```
 
-## 🔧 Uso Avançado
+6. **Acesse no navegador**
+   ```
+   http://localhost:5000
+   ```
 
-### Importar como Módulo
+## 🚀 Como Usar
 
-```python
-from translate import Translator
+1. **Digite ou cole** o texto que deseja traduzir no campo "Texto Original"
+2. **Selecione o idioma de origem** (ou deixe em "Detectar idioma")
+3. **Escolha o idioma de destino** no campo "Tradução"
+4. **Aguarde a tradução automática** ou pressione `Ctrl+Enter` para traduzir
+5. **Use os botões de ação**:
+   - 📋 **Copiar**: Copia a tradução para a área de transferência
+   - 🔊 **Ouvir**: Reproduz a pronúncia da tradução
 
-# Inicializar o tradutor
-translator = Translator()
+### Atalhos de Teclado
+- `Ctrl + K`: Focar no campo de texto
+- `Ctrl + Enter`: Traduzir texto
+- `Ctrl + C`: Copiar tradução (quando não há texto selecionado)
+- `Ctrl + L`: Limpar todos os campos
+- `Esc`: Cancelar tradução em andamento
 
-# Tradução simples
-resultado = translator.translate("Hello world!")
-print(resultado)  # "Olá mundo!"
+## 📸 Screenshots
 
-# Tradução em lote
-textos = ["Good morning", "How are you?", "See you later"]
-resultados = translator.translate_batch(textos)
-for original, traduzido in zip(textos, resultados):
-    print(f"{original} → {traduzido}")
-```
+<!-- Adicione aqui screenshots da aplicação -->
+*Screenshots serão adicionados em breve*
+
+## 🌐 Demo Online
+
+🔗 **Link do Site**: [https://quantumm-translator.vercel.app](https://quantumm-translator.vercel.app)
+
+*Acesse a versão online e experimente todas as funcionalidades!*
 
 ## 📁 Estrutura do Projeto
 
 ```
-translate-Quantum/
-├── 📄 translate.py          # Script principal de tradução
-├── 📄 requirements.txt      # Dependências do projeto
-├── 📄 README.md            # Documentação
-├── 📄 .gitignore           # Arquivos ignorados pelo Git
-└── 📁 venv/                # Ambiente virtual (não versionado)
+quantumm/
+├── 📄 app.py              # Aplicação Flask principal
+├── 📄 translate.py        # Lógica de tradução
+├── 📄 config.py          # Configurações da aplicação
+├── 📄 index.html         # Interface principal
+├── 📄 script.js          # JavaScript frontend
+├── 📄 requirements.txt   # Dependências Python
+├── 📄 runtime.txt        # Versão do Python
+├── 📄 Procfile          # Configuração Heroku
+├── 📄 vercel.json       # Configuração Vercel
+├── 📄 .gitignore        # Arquivos ignorados pelo Git
+├── 📄 .env.example      # Exemplo de variáveis de ambiente
+└── 📄 README.md         # Este arquivo
 ```
 
-## 🤖 Modelo Utilizado
+## 🤝 Contribuição
 
-- **Modelo**: [Helsinki-NLP/opus-mt-tc-big-en-pt](https://huggingface.co/Helsinki-NLP/opus-mt-tc-big-en-pt)
-- **Função**: Tradução de inglês para português
-- **Fonte**: Hugging Face Model Hub
-- **Tamanho**: ~465MB
-- **Qualidade**: Alta precisão para textos gerais
-
-## 🛠️ Dependências Principais
-
-- **transformers**: Biblioteca da Hugging Face para modelos de transformers
-- **torch**: Framework de deep learning PyTorch
-- **sentencepiece**: Tokenizador para processamento de texto
-- **sacremoses**: Ferramentas de pré-processamento de texto
-
-## 🚨 Solução de Problemas
-
-### Erro de Permissão no PowerShell
-```bash
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-```
-
-### Erro de Instalação
-```bash
-python -m pip install --upgrade pip
-```
-
-### Problemas de Memória
-O modelo pode requerer bastante RAM (recomendado: 4GB+). Feche outros programas se necessário.
-
-## 🤝 Contribuindo
+Contribuições são sempre bem-vindas! Para contribuir:
 
 1. Faça um fork do projeto
 2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
@@ -167,23 +143,28 @@ O modelo pode requerer bastante RAM (recomendado: 4GB+). Feche outros programas 
 4. Push para a branch (`git push origin feature/AmazingFeature`)
 5. Abra um Pull Request
 
-## 📄 Licença
+## 📝 Licença
 
 Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
 
+## 👨‍💻 Autor
+
+**Maycon Mancilha**
+- GitHub: [@mayconmancilha](https://github.com/mayconmancilha)
+- LinkedIn: [mayconmancilha](https://linkedin.com/in/mayconmancilha)
+- Email: contato@mayconmancilha.dev
+
 ## 🙏 Agradecimentos
 
-- [Helsinki-NLP](https://huggingface.co/Helsinki-NLP) pelo modelo de tradução
-- [Hugging Face](https://huggingface.co/) pela plataforma e bibliotecas
-- [PyTorch](https://pytorch.org/) pelo framework de deep learning
-
-## 📞 Suporte
-
-Para problemas ou dúvidas:
-- 📧 Abra uma [issue](https://github.com/mmancilha/translate-Quantum/issues)
-- 📚 Consulte a [documentação do Transformers](https://huggingface.co/docs/transformers)
-- 🤖 Veja o [modelo específico](https://huggingface.co/Helsinki-NLP/opus-mt-tc-big-en-pt)
+- Google Translate API pela excelente API de tradução
+- Tailwind CSS pela framework de CSS utilitária
+- Font Awesome pelos ícones incríveis
+- Vercel pela plataforma de deploy gratuita
+- Comunidade open source pelo suporte e inspiração
 
 ---
 
-⭐ **Se este projeto foi útil para você, considere dar uma estrela!** ⭐
+<div align="center">
+  <p>⭐ Se este projeto te ajudou, considere dar uma estrela!</p>
+  <p>🚀 Desenvolvido com ❤️ e tecnologia de IA avançada para quebrar barreiras linguísticas</p>
+</div>
