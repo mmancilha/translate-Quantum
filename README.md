@@ -9,6 +9,9 @@
 
 > **Quantumm** é um tradutor web moderno e inteligente que oferece tradução instantânea entre múltiplos idiomas com uma interface elegante e intuitiva, inspirada no design do Google Translate.
 
+### 🔗 Repositório Acadêmico
+Para mais projetos e documentação técnica da jornada acadêmica, visite: [IT Valley School - AI & ML Portfolio](https://github.com/mmancilha/it-valley-school)
+
 ## ✨ Funcionalidades Principais
 
 - 🚀 **Tradução Instantânea**: Tradução em tempo real conforme você digita
@@ -138,7 +141,7 @@ O **Quantumm** utiliza **tradução contextual** através da Google Translate AP
 
 ## 🌐 Demo Online
 
-🔗 **Link do Site**: [https://quantumm-translator.vercel.app](https://quantumm-translator.vercel.app)
+🔗 **Link do Site**: [https://mmancilha.github.io/translate-Quantum/](https://mmancilha.github.io/translate-Quantum/)
 
 *Acesse a versão online e experimente todas as funcionalidades!*
 
@@ -181,9 +184,6 @@ Este projeto foi desenvolvido como parte da **pós-graduação em Inteligência 
 - Integração de **tecnologias modernas** (React, Python, Flask)
 - Demonstração de **arquitetura full-stack** para soluções de IA
 
-### 🔗 Repositório Acadêmico
-Para mais projetos e documentação técnica da jornada acadêmica, visite: [IT Valley School - AI & ML Portfolio](https://github.com/mmancilha/it-valley-school)
-
 ## 📝 Licença
 
 Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
@@ -193,14 +193,13 @@ Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICE
 **Maycon Mancilha**
 - GitHub: [@mayconmancilha](https://github.com/mayconmancilha)
 - LinkedIn: [mayconmancilha](https://linkedin.com/in/mayconmancilha)
-- Email: contato@mayconmancilha.dev
+- Email: mancilhamaycon@gmail.com
 
 ## 🙏 Agradecimentos
 
 - Google Translate API pela excelente API de tradução
 - Tailwind CSS pela framework de CSS utilitária
 - Font Awesome pelos ícones incríveis
-- Vercel pela plataforma de deploy gratuita
 - Comunidade open source pelo suporte e inspiração
 
 ---
