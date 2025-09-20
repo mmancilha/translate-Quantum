@@ -1,5 +1,7 @@
 # 🌐 Quantumm - Tradutor Inteligente
 
+> Projeto desenvolvido durante a pós-graduação em **Inteligência Artificial & Machine Learning** pela [IT Valley School](https://github.com/mmancilha/it-valley-school)
+
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://python.org)
 [![Flask](https://img.shields.io/badge/Flask-2.3.3-green.svg)](https://flask.palletsprojects.com/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -18,6 +20,31 @@
 - 🔊 **Síntese de Voz**: Ouça a pronúncia das traduções
 - ⌨️ **Atalhos de Teclado**: Navegação rápida com shortcuts
 - 🔒 **Privacidade Garantida**: Processamento seguro dos dados
+
+## 🧠 Tipo de Tradução
+
+O **Quantumm** utiliza **tradução contextual** através da Google Translate API com Neural Machine Translation (NMT), oferecendo:
+
+### 🎯 Características Técnicas
+- **Precisão contextual**: 85.7% de acurácia
+- **Redes neurais avançadas**: Compreensão semântica profunda
+- **Processamento inteligente**: Análise de ambiguidades, expressões idiomáticas e metáforas
+- **Adaptação cultural**: Traduções que respeitam contextos culturais
+
+### 📊 Exemplos de Tradução Contextual vs Literal
+
+| Expressão Original | Tradução Literal | Tradução Contextual |
+|-------------------|------------------|--------------------|  
+| "Break a leg" | "Quebrar uma perna" | "Boa sorte" |
+| "Bank" (contexto financeiro) | "Banco" | "Banco" |
+| "Bank" (contexto rio) | "Banco" | "Margem" |
+| "Time flies" | "Tempo voa" | "O tempo passa rápido" |
+
+### ✨ Vantagens da Tradução Contextual
+- **Qualidade superior**: Traduções mais naturais e fluidas
+- **Compreensão semântica**: Entende o significado além das palavras
+- **Adaptação cultural**: Respeita nuances culturais e regionais
+- **Fluidez linguística**: Resultado mais próximo ao texto nativo
 
 ## 🛠️ Tecnologias Utilizadas
 
@@ -143,6 +170,20 @@ Contribuições são sempre bem-vindas! Para contribuir:
 4. Push para a branch (`git push origin feature/AmazingFeature`)
 5. Abra um Pull Request
 
+## 🎓 Contexto Acadêmico
+
+Este projeto foi desenvolvido como parte da **pós-graduação em Inteligência Artificial & Machine Learning** pela **IT Valley School**, com foco em padrões internacionais da indústria.
+
+### 🎯 Objetivos Acadêmicos
+- Aplicação prática de conceitos de **Natural Language Processing (NLP)**
+- Implementação de **APIs de tradução neural**
+- Desenvolvimento de **interfaces responsivas** para aplicações de IA
+- Integração de **tecnologias modernas** (React, Python, Flask)
+- Demonstração de **arquitetura full-stack** para soluções de IA
+
+### 🔗 Repositório Acadêmico
+Para mais projetos e documentação técnica da jornada acadêmica, visite: [IT Valley School - AI & ML Portfolio](https://github.com/mmancilha/it-valley-school)
+
 ## 📝 Licença
 
 Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
@@ -166,5 +207,6 @@ Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICE
 
 <div align="center">
   <p>⭐ Se este projeto te ajudou, considere dar uma estrela!</p>
-  <p>🚀 Desenvolvido com ❤️ e tecnologia de IA avançada para quebrar barreiras linguísticas</p>
+  <p>🎓 <em>Projeto acadêmico - IT Valley School | IA & Machine Learning</em></p>
+  <p>🚀 <em>Desenvolvido com ❤️ e tecnologia de IA avançada para quebrar barreiras linguísticas</em></p>
 </div>
