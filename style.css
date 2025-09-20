@@ -1,0 +1,760 @@
+/* Reset e configurações base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    color: #e8eaed;
+    min-height: 100vh;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header */
+.header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding: 20px 0;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.logo .material-icons {
+    font-size: 32px;
+    color: #4285f4;
+}
+
+.logo h1 {
+    font-size: 28px;
+    font-weight: 400;
+    color: #e8eaed;
+}
+
+.subtitle {
+    font-size: 16px;
+    color: #9aa0a6;
+    font-weight: 300;
+}
+
+/* Main Translator */
+.translator {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px; /* Reduzido de 24px para 16px para compensar o botão oculto */
+}
+
+.translation-container {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 16px;
+    align-items: start;
+    margin-bottom: 24px; /* Adiciona espaço inferior para compensar o botão oculto */
+}
+
+/* Language Panels */
+.language-panel {
+    background: #303134;
+    border-radius: 12px;
+    border: 1px solid #5f6368;
+    /* overflow: hidden; */
+    transition: all 0.2s ease;
+}
+
+.language-panel:hover {
+    border-color: #8ab4f8;
+    box-shadow: 0 2px 8px rgba(138, 180, 248, 0.1);
+}
+
+.language-header {
+    padding: 16px 20px;
+    background: #3c4043;
+    border-bottom: 1px solid #5f6368;
+}
+
+/* O container que vai ter o efeito de "botão" */
+.language-selector {
+    position: relative; /* Essencial para os pseudo-elementos */
+    z-index: 0;
+    width: 100%;
+    border-radius: 10px;
+}
+
+/* O elemento que cria o brilho colorido (glow) */
+.language-selector:before {
+    content: '';
+    background: linear-gradient(45deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bff, #7a00ff, #ff00c8, #ff0000);
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    background-size: 400%;
+    z-index: -1; /* Fica atrás do fundo */
+    filter: blur(5px);
+    width: calc(100% + 4px);
+    height: calc(100% + 4px);
+    animation: glowing 20s linear infinite;
+    opacity: 0; /* Começa invisível */
+    transition: opacity .3s ease-in-out;
+    border-radius: 10px;
+}
+
+/* Mostra o brilho quando o mouse está sobre o container */
+.language-selector:hover:before {
+    opacity: 1;
+}
+
+/* O fundo escuro do "botão", que fica sobre o brilho */
+.language-selector:after {
+    z-index: -1;
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: #3c4043;
+    left: 0;
+    top: 0;
+    border-radius: 10px;
+
+    /* ADICIONE ESTAS DUAS LINHAS 👇 */
+    border: 1px solid #5f6368; /* Cria a borda sutil permanente */
+    box-sizing: border-box;     /* Garante que a borda não altere o tamanho */
+}
+
+/* O elemento <select> em si, agora estilizado */
+.language-select {
+    width: 100%;
+    background: transparent; /* Fundo transparente para vermos o :after */
+    color: #e8eaed; /* Cor do texto */
+    border: none;
+    outline: none;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 10px;
+    cursor: pointer;
+    position: relative; /* Garante que ele fique no topo */
+    z-index: 1;
+
+    /* Remove a aparência padrão do browser (incluindo a seta) */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+.language-select:hover {
+    background-color: #30363a;
+    border-color: #8ab4f8;
+}
+
+.language-select:focus {
+    border-color: #8ab4f8;
+    box-shadow: 0 0 0 3px rgba(138, 180, 248, 0.2);
+}
+
+.language-select:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+@keyframes glowing {
+    0% { background-position: 0 0; }
+    50% { background-position: 400% 0; }
+    100% { background-position: 0 0; }
+}
+
+.language-select option {
+    background: #111;
+    color: #fff;
+    padding: 8px;
+}
+
+/* Detected Language Indicator */
+.detected-language {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    padding: 6px 10px;
+    background: rgba(52, 168, 83, 0.1);
+    border: 1px solid rgba(52, 168, 83, 0.3);
+    border-radius: 6px;
+    font-size: 12px;
+    color: #81c995;
+}
+
+.detected-language .material-icons {
+    font-size: 16px;
+    color: #34a853;
+}
+
+/* Translation Path Info */
+.translation-path {
+    font-size: 11px;
+    color: #9aa0a6;
+    font-style: italic;
+    padding: 4px 0;
+}
+
+/* Control Buttons Layout */
+.text-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    background: #3c4043;
+    border-top: 1px solid #5f6368;
+}
+
+.control-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.char-counter {
+    font-size: 12px;
+    color: #9aa0a6;
+}
+
+.translation-info {
+    flex: 1;
+}
+
+/* Text Areas */
+.text-area-container {
+    position: relative;
+}
+
+.text-area {
+    width: 100%;
+    min-height: 200px;
+    padding: 20px;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: 16px;
+    line-height: 1.5;
+    color: #e8eaed;
+    resize: vertical;
+    font-family: inherit;
+}
+
+.source-text::placeholder {
+    color: #9aa0a6;
+}
+
+.target-text {
+    cursor: default;
+    color: #e8eaed;
+    position: relative;
+}
+
+.target-text:empty::before {
+    content: attr(data-placeholder);
+    color: #9aa0a6;
+    font-style: italic;
+    position: absolute;
+    pointer-events: none;
+}
+
+.target-text:not(:empty) {
+    color: #e8eaed;
+}
+
+.target-text:focus {
+    outline: none;
+}
+
+
+
+/* Hidden class */
+.hidden {
+    display: none !important;
+}
+
+/* Text Controls */
+.text-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    background: #3c4043;
+    border-top: 1px solid #5f6368;
+    flex-wrap: nowrap; /* Garante que os elementos fiquem na mesma linha */
+}
+
+.control-btn {
+    background: none;
+    border: none;
+    color: #9aa0a6;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0; /* Impede que o botão encolha */
+    min-width: 40px; /* Largura mínima para manter consistência */
+    min-height: 40px; /* Altura mínima para manter consistência */
+    position: relative;
+    overflow: hidden;
+}
+
+.control-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border-radius: 50%;
+}
+
+/* Adicionar indicação visual de que é clicável */
+.control-btn:not(:disabled) {
+    border: 1px solid transparent;
+}
+
+.control-btn:hover:not(:disabled) {
+    background: #5f6368;
+    color: #e8eaed;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    border-color: rgba(66, 133, 244, 0.5);
+}
+
+.control-btn:hover:not(:disabled)::before {
+    opacity: 1;
+}
+
+.control-btn:active:not(:disabled) {
+    transform: scale(0.95);
+    transition: transform 0.1s ease;
+}
+
+.control-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    color: #5f6368;
+}
+
+.char-count {
+    font-size: 12px;
+    color: #9aa0a6;
+    white-space: nowrap; /* Impede quebra de linha no contador */
+    flex-shrink: 0; /* Impede que o contador encolha */
+}
+
+/* Swap Button */
+.swap-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 0;
+}
+
+.swap-btn {
+    background: #303134;
+    border: 1px solid #5f6368;
+    color: #9aa0a6;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.swap-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle, rgba(66, 133, 244, 0.2) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border-radius: 50%;
+}
+
+.swap-btn:hover:not(:disabled) {
+    background: #5f6368;
+    color: #e8eaed;
+    transform: rotate(180deg) scale(1.1);
+    border-color: #4285f4;
+    box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
+}
+
+.swap-btn:hover:not(:disabled)::before {
+    opacity: 1;
+}
+
+.swap-btn:active:not(:disabled) {
+    transform: rotate(180deg) scale(0.95);
+    transition: transform 0.2s ease;
+}
+
+.swap-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Translate Button Container - mantém espaço mas oculta botão */
+.translate-button-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 0; /* Remove margem superior já que o container principal tem margin-bottom */
+    min-height: 0; /* Remove altura mínima para economizar espaço */
+}
+
+.translate-btn {
+    background: linear-gradient(135deg, #4285f4, #34a853);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 24px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(66, 133, 244, 0.3);
+    display: flex; /* Sempre visível */
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+}
+
+.translate-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border-radius: 24px;
+}
+
+.translate-btn:hover:not(:disabled) {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 6px 20px rgba(66, 133, 244, 0.5);
+    background: linear-gradient(135deg, #5a9df7, #4caf50);
+}
+
+.translate-btn:hover:not(:disabled)::before {
+    opacity: 1;
+}
+
+.translate-btn:active:not(:disabled) {
+    transform: translateY(-1px) scale(1.02);
+    transition: transform 0.1s ease;
+}
+
+.translate-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    background: linear-gradient(135deg, #666, #777);
+}
+
+/* Mostrar botão quando necessário (fallback) */
+.show-translate-btn .translate-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Loading Indicator */
+.loading-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 20px;
+    color: #9aa0a6;
+}
+
+.spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #5f6368;
+    border-top: 2px solid #4285f4;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Error Message */
+.error-message {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px;
+    background: #3c1e1e;
+    border: 1px solid #d93025;
+    border-radius: 8px;
+    color: #f28b82;
+    margin: 20px 0;
+}
+
+.error-message .material-icons {
+    font-size: 20px;
+}
+
+/* Utility Classes */
+.hidden {
+    display: none !important;
+}
+
+/* Footer */
+.footer {
+    margin-top: 40px;
+    padding: 20px 0;
+    border-top: 1px solid #5f6368;
+    text-align: center;
+}
+
+.footer-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.footer-content p {
+    color: #9aa0a6;
+    font-size: 14px;
+}
+
+.footer-links {
+    display: flex;
+    gap: 16px;
+}
+
+.footer-links a {
+    color: #8ab4f8;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    padding: 8px 12px;
+    border-radius: 6px;
+}
+
+.footer-links a:hover {
+    color: #aecbfa;
+    background: rgba(138, 180, 248, 0.1);
+    transform: translateY(-1px);
+}
+
+.footer-links .material-icons {
+    font-size: 16px;
+}
+
+/* Social Icons */
+.social-link {
+    position: relative;
+}
+
+.social-icon {
+    width: 18px;
+    height: 18px;
+    transition: all 0.2s ease;
+}
+
+.social-link:hover .social-icon {
+    transform: scale(1.1);
+}
+
+/* Indicador de tradução automática */
+.auto-translate-indicator {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(66, 133, 244, 0.1);
+    color: #4285f4;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.auto-translate-indicator.active {
+    opacity: 1;
+}
+
+/* Indicador de digitação */
+.typing-indicator {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    color: #5f6368;
+    font-size: 11px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.typing-indicator.active {
+    opacity: 1;
+}
+
+/* Animação de pulsação para tradução em andamento */
+.textarea.translating {
+    border-color: #4285f4;
+    box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+}
+
+.textarea.translating::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border: 2px solid #4285f4;
+    border-radius: 12px;
+    animation: pulse 1.5s infinite;
+    pointer-events: none;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(66, 133, 244, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(66, 133, 244, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(66, 133, 244, 0);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 16px;
+    }
+    
+    .translation-container {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .swap-container {
+        order: -1;
+        padding: 0;
+    }
+    
+    .swap-btn {
+        transform: rotate(90deg);
+    }
+    
+    .swap-btn:hover:not(:disabled) {
+        transform: rotate(270deg);
+    }
+    
+    .logo h1 {
+        font-size: 24px;
+    }
+    
+    .text-area {
+        min-height: 150px;
+        font-size: 14px;
+    }
+    
+    .footer-content {
+        flex-direction: column;
+        gap: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 12px;
+    }
+    
+    .header {
+        margin-bottom: 24px;
+    }
+    
+    .logo {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .text-area {
+        padding: 16px;
+        min-height: 120px;
+    }
+    
+    .text-controls {
+        padding: 8px 16px;
+    }
+}
+
+/* Animações suaves */
+.language-panel,
+.translate-btn,
+.control-btn,
+.swap-btn {
+    transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+/* Scrollbar personalizada */
+.text-area::-webkit-scrollbar {
+    width: 8px;
+}
+
+.text-area::-webkit-scrollbar-track {
+    background: #3c4043;
+}
+
+.text-area::-webkit-scrollbar-thumb {
+    background: #5f6368;
+    border-radius: 4px;
+}
+
+.text-area::-webkit-scrollbar-thumb:hover {
+    background: #8ab4f8;
+}

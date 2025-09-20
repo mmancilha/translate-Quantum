@@ -1,6 +1,6 @@
 from transformers import pipeline
 
-modelo = "Helsinki-NLP/opus-mt-tc-big-en-pt"
+modelo = "Hfacebook/fasttext-lid-176-ft-1b"
 
 def translate():
   translate= pipeline(task="translation", model=modelo)
