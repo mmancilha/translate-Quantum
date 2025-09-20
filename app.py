@@ -41,7 +41,7 @@ SUPPORTED_LANGUAGES = {
     'it': 'Italiano',
     'ja': 'Japonês',
     'ko': 'Coreano',
-    'zh': 'Chinês',
+    'zh-cn': 'Chinês',
     'ru': 'Russo',
     'ar': 'Árabe'
 }
@@ -101,10 +101,10 @@ def normalize_language_code(lang_code):
         'ko': 'ko',
         'korean': 'ko',
         'coreano': 'ko',
-        'zh': 'zh',
-        'zh-cn': 'zh',
-        'chinese': 'zh',
-        'chines': 'zh',
+        'zh': 'zh-cn',
+        'zh-cn': 'zh-cn',
+        'chinese': 'zh-cn',
+        'chines': 'zh-cn',
         'ru': 'ru',
         'russian': 'ru',
         'russo': 'ru',
