@@ -1,6 +1,6 @@
 # 🌐 Quantumm - Tradutor Inteligente
 
-> Projeto desenvolvido durante a pós-graduação em **Inteligência Artificial & Machine Learning** pela [IT Valley School](https://github.com/mmancilha/it-valley-school)
+> Projeto desenvolvido durante a pós-graduação em **Inteligência Artificial & Machine Learning** pela [IT Valley School](https://br.itvalleyschool.com/)
 
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://python.org)
 [![Flask](https://img.shields.io/badge/Flask-2.3.3-green.svg)](https://flask.palletsprojects.com/)
