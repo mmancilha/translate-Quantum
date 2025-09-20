@@ -242,12 +242,7 @@ function showLoading() {
 }
 
 function clearOutput() {
-    outputContent.innerHTML = `
-        <div class="text-center">
-            <i class="fas fa-comments text-4xl text-google-muted mb-4"></i>
-            <p>A tradução aparecerá aqui...</p>
-        </div>
-    `;
+    outputContent.innerHTML = '';
     copyBtn.disabled = true;
     speakBtn.disabled = true;
     copyBtn.classList.add('opacity-50', 'cursor-not-allowed');
