@@ -201,7 +201,7 @@ async function translateText() {
             `;
             
             outputContent.innerHTML = '';
-            outputContent.className = 'min-h-80 bg-google-bg border border-google-border rounded-lg';
+            outputContent.className = 'h-32 sm:h-36 lg:h-40 bg-google-bg border border-google-border rounded-lg overflow-y-auto';
             outputContent.appendChild(translationContainer);
             
             // Trigger animation
