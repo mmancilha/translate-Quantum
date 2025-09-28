@@ -1,4 +1,4 @@
-# 🌐 Quantumm - Tradutor Inteligente
+# 🌐 Quantumm - Tradutor Inteligente!
 
 > Projeto desenvolvido durante a pós-graduação em **Inteligência Artificial & Machine Learning** pela [IT Valley School](https://br.itvalleyschool.com/)
 
